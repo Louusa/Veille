@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Veille">
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#0b1220"><title>Veille</title>
+<style>
+:root{--ink:#f4f7ff;--muted:rgba(235,242,255,.64);--edge:rgba(255,255,255,.4);--dim:rgba(255,255,255,.11);
+--blue:#5aa9ff;--ok:#5be3a4;--warn:#ffc864;--bad:#ff8e8e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font:17px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:var(--ink);background:#0b1220;
+padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#0b1220}
+.bg i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.85}
+.bg i:nth-child(1){width:70vmax;height:70vmax;left:-25vmax;top:-20vmax;background:#2f6bff}
+.bg i:nth-child(2){width:60vmax;height:60vmax;right:-25vmax;top:25vh;background:#9b4dff}
+.bg i:nth-child(3){width:55vmax;height:55vmax;left:5vmax;bottom:-28vmax;background:#10c8c0}
+main{max-width:30rem;margin:0 auto;padding:26px 18px 60px}
+h1{font-size:2.1rem;letter-spacing:-.03em;margin:6px 4px 2px}
+h2{font-size:1.05rem;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 4px 20px}
+.glass{position:relative;border-radius:26px;padding:18px;margin:0 0 14px;
+background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.12) 40%,rgba(255,255,255,.06));
+-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+border:1px solid var(--dim);box-shadow:inset 1px 1px 0 var(--edge),inset -1px -1px 0 rgba(255,255,255,.08),0 18px 40px -18px rgba(0,0,0,.55)}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 20% 0%,rgba(255,255,255,.26),transparent 55%)}
+.glass>*{position:relative}
+input,textarea{width:100%;font:inherit;color:var(--ink);padding:14px 16px;margin:0 0 10px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--dim);outline:none}
+textarea{min-height:96px;resize:vertical}
+::placeholder{color:var(--muted)}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(90,169,255,.35)}
+button{font:inherit;color:var(--ink);cursor:pointer;border:0;border-radius:999px;padding:13px 20px;font-weight:600;
+background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.14));box-shadow:inset 1px 1px 0 var(--edge),0 8px 20px -10px rgba(0,0,0,.6);transition:transform .15s}
+button:active{transform:scale(.96)}
+button.main{background:linear-gradient(180deg,#78b9ff,#3f86ff);color:#fff}
+button.wide{width:100%}button.grow{flex:1}
+button.link{background:none;box-shadow:none;color:var(--blue);padding:8px}
+button.pill{font-variant-numeric:tabular-nums;font-size:1.15rem;min-width:96px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center}
+.err{color:var(--bad);min-height:1.2em;margin:4px 2px 0}.info{color:var(--ok);margin:8px 2px 0}.hint{color:var(--muted);font-size:.92rem;margin:6px 2px 0}
+[hidden]{display:none!important}
+.task .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+.task .topic{font-weight:600}
+.verdict{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;margin:6px 0 4px}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.unk{color:var(--muted)}
+.upd{color:var(--muted);font-size:.88rem;margin:6px 0 0}
+#sheet{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-end;background:rgba(0,0,0,.4)}
+#sheet .glass{width:100%;max-width:30rem;margin:0 auto;border-radius:30px 30px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom));background:linear-gradient(145deg,rgba(40,52,84,.82),rgba(30,40,70,.7))}
+.ww{position:relative;display:flex;justify-content:center;gap:6px;height:176px;margin:4px 0 14px}
+.ww::before{content:"";position:absolute;left:8%;right:8%;top:50%;height:44px;transform:translateY(-50%);border-radius:14px;background:rgba(255,255,255,.2);box-shadow:inset 1px 1px 0 var(--edge)}
+.ww::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#1a2440dd,transparent 32%,transparent 68%,#1a2440dd)}
+.wheel{width:84px;height:176px;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;padding:66px 0;text-align:center;overscroll-behavior:contain}
+.wheel::-webkit-scrollbar{display:none}
+.wheel div{height:44px;line-height:44px;font-size:1.7rem;scroll-snap-align:center;font-variant-numeric:tabular-nums}
+.colon{align-self:center;font-size:1.7rem;font-weight:600;padding-bottom:4px;position:relative;z-index:1}
+</style></head><body>
+<div class="bg"><i></i><i></i><i></i></div>
+<main>
+<section id="auth" hidden>
+  <h1>Veille</h1><p class="sub">Dis ce que tu veux surveiller. Reçois un résumé à l’heure de ton choix.</p>
+  <div class="glass">
+    <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email">
+    <input id="pass" type="password" placeholder="Mot de passe (6 caractères minimum)" autocomplete="current-password">
+    <button id="signin" class="main wide">Se connecter</button>
+    <button id="google" class="wide" style="margin-top:10px">Continuer avec Google</button>
+    <div class="row" style="justify-content:center;margin-top:6px"><button id="signup" class="link">Créer un compte</button><button id="reset" class="link">Mot de passe oublié</button></div>
+    <p id="authErr" class="err" role="alert"></p><p id="authInfo" class="info"></p>
+  </div>
+</section>
+<section id="verify" hidden>
+  <h1>Vérifie ton e-mail</h1><p class="sub">Un lien de confirmation vient de t’être envoyé (regarde aussi les courriers indésirables). Touche-le, puis reviens ici.</p>
+  <div class="glass"><button id="checked" class="main wide">C’est fait</button>
+    <div class="row" style="justify-content:center;margin-top:6px"><button id="resend" class="link">Renvoyer le lien</button><button id="out1" class="link">Changer de compte</button></div>
+    <p id="verErr" class="err" role="alert"></p></div>
+</section>
+<section id="app" hidden>
+  <h1>Veille</h1><p class="sub" id="who"></p>
+  <div class="glass"><h2>Nouvelle veille</h2>
+    <textarea id="topic" placeholder="Exemple : préviens-moi quand les pistes de ski de fond ouvrent près de Villars."></textarea>
+    <div class="row"><button id="newTime" class="pill">07 : 30</button><button id="addTask" class="main grow">Ajouter</button></div>
+    <p id="taskErr" class="err" role="alert"></p></div>
+  <div id="tasks"></div>
+  <div class="glass"><h2>Notifications</h2>
+    <button id="notif" class="wide">Activer les notifications</button><p id="notifInfo" class="info"></p>
+    <p id="notifHint" class="hint" hidden>Sur iPhone : bouton Partager, puis « Sur l’écran d’accueil », et rouvre Veille depuis l’icône.</p>
+    <button id="geo" class="wide" style="margin-top:10px">Partager ma position approximative</button><p id="geoInfo" class="info"></p>
+    <p class="hint" id="tz"></p></div>
+  <button id="out2" class="link wide">Se déconnecter</button>
+</section>
+</main>
+<div id="sheet" hidden><div class="glass">
+  <div class="ww"><div class="wheel" id="wh"></div><div class="colon">:</div><div class="wheel" id="wm"></div></div>
+  <div class="row"><button id="sheetNo" class="grow">Annuler</button><button id="sheetOk" class="main grow">Valider</button></div>
+</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, collection, addDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* À REMPLIR : config web Firebase et clé publique VAPID (voir le guide PDF). */
+const firebaseConfig = { apiKey:"À_REMPLIR", authDomain:"À_REMPLIR", projectId:"À_REMPLIR", appId:"À_REMPLIR" };
+const VAPID_PUBLIC_KEY = "À_REMPLIR";
+
+const auth = getAuth(initializeApp(firebaseConfig)), db = getFirestore();
+const $ = (id) => document.getElementById(id);
+const show = (id) => ["auth","verify","app"].forEach((s) => ($(s).hidden = s !== id));
+const pad = (n) => String(n).padStart(2,"0");
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+let unsub = null, newT = { h:7, m:30 };
+
+const errMsg = (e) => ({
+  "auth/invalid-credential":"E-mail ou mot de passe incorrect.","auth/email-already-in-use":"Un compte existe déjà avec cet e-mail.",
+  "auth/weak-password":"Mot de passe trop court : 6 caractères minimum.","auth/invalid-email":"Adresse e-mail invalide.",
+  "auth/too-many-requests":"Trop d’essais. Réessaie dans quelques minutes."}[e.code] || "Une erreur est survenue. Réessaie.");
+
+$("signin").onclick = () => signInWithEmailAndPassword(auth,$("email").value,$("pass").value).catch((e)=>$("authErr").textContent=errMsg(e));
+$("signup").onclick = async () => { try { const c = await createUserWithEmailAndPassword(auth,$("email").value,$("pass").value); await sendEmailVerification(c.user); } catch(e){ $("authErr").textContent = errMsg(e); } };
+$("google").onclick = async () => { const g = new GoogleAuthProvider(); $("authErr").textContent="";
+  try { await signInWithPopup(auth, g); }
+  catch(e){ if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment"].includes(e.code)) signInWithRedirect(auth, g);
+    else if(!["auth/popup-closed-by-user","auth/cancelled-popup-request"].includes(e.code)) $("authErr").textContent="Connexion Google impossible. Utilise ton e-mail."; } };
+$("reset").onclick = async () => { $("authErr").textContent=""; if(!$("email").value) return $("authErr").textContent="Entre d’abord ton adresse e-mail.";
+  try { await sendPasswordResetEmail(auth,$("email").value); $("authInfo").textContent="Lien de réinitialisation envoyé."; } catch(e){ $("authErr").textContent=errMsg(e); } };
+$("resend").onclick = async () => { try { await sendEmailVerification(auth.currentUser); $("verErr").textContent=""; } catch(e){ $("verErr").textContent=errMsg(e); } };
+$("checked").onclick = async () => { await auth.currentUser.reload(); if(auth.currentUser.emailVerified){ await auth.currentUser.getIdToken(true); start(auth.currentUser); } else $("verErr").textContent="E-mail pas encore vérifié. Touche le lien reçu."; };
+$("out1").onclick = $("out2").onclick = () => signOut(auth);
+onAuthStateChanged(auth,(u)=>{ if(unsub){unsub();unsub=null} if(!u) return show("auth"); if(!u.emailVerified) return show("verify"); start(u); });
+
+/* Sélecteur d'heure en feuille de verre, partagé par « nouvelle veille » et « modifier l'heure ». */
+let sheetCb = null;
+const wheelVal = (el) => Math.min(Math.round(el.scrollTop/44), el.children.length-1);
+function wheel(el,max,sel){ el.innerHTML=""; for(let i=0;i<max;i++){const d=document.createElement("div");d.textContent=pad(i);el.appendChild(d)} requestAnimationFrame(()=>el.scrollTop=sel*44); }
+function openSheet(h,m,cb){ sheetCb=cb; $("sheet").hidden=false; wheel($("wh"),24,h); wheel($("wm"),60,m); }
+$("sheetNo").onclick = () => ($("sheet").hidden=true);
+$("sheetOk").onclick = () => { const h=wheelVal($("wh")), m=wheelVal($("wm")); $("sheet").hidden=true; sheetCb(h,m); };
+$("newTime").onclick = () => openSheet(newT.h,newT.m,(h,m)=>{ newT={h,m}; $("newTime").textContent=`${pad(h)} : ${pad(m)}`; });
+
+const save = (data) => setDoc(doc(db,"users",auth.currentUser.uid),data,{merge:true});
+
+function start(user){
+  show("app"); $("who").textContent = user.email;
+  $("tz").textContent = "Fuseau détecté : " + timeZone.replace("_"," ") + " (l’heure suit ton téléphone).";
+  save({ timeZone });
+  unsub = onSnapshot(query(collection(db,"users",user.uid,"tasks"),orderBy("createdAt","desc")),(snap)=>{
+    const box=$("tasks"); box.innerHTML="";
+    if(snap.empty){ box.innerHTML='<div class="glass"><p class="hint" style="margin:0">Aucune veille pour l’instant.</p></div>'; return; }
+    snap.forEach((d)=>{
+      const t=d.data(), card=document.createElement("div"); card.className="glass task";
+      const top=document.createElement("div"); top.className="top";
+      const name=document.createElement("span"); name.className="topic"; name.textContent=t.topic;
+      const pill=document.createElement("button"); pill.className="pill"; pill.textContent=`${pad(t.hour)} : ${pad(t.minute)}`;
+      pill.setAttribute("aria-label","Modifier l’heure");
+      pill.onclick=()=>openSheet(t.hour,t.minute,(h,m)=>updateDoc(d.ref,{hour:h,minute:m,prepKey:null,sentKey:null}));
+      top.append(name,pill); card.appendChild(top);
+      if(t.result){
+        const v=document.createElement("p"); v.className="verdict "+t.result.tone; v.textContent=t.result.verdict;
+        const s=document.createElement("p"); s.style.margin="0"; s.textContent=t.result.summary;
+        const u=document.createElement("p"); u.className="upd"; u.textContent="Actualisé à "+t.result.at;
+        card.append(v,s,u);
+      } else { const p=document.createElement("p"); p.className="hint"; p.textContent="Premier résumé environ 2 heures avant l’heure choisie."; card.appendChild(p); }
+      const del=document.createElement("button"); del.className="link"; del.textContent="Supprimer"; del.onclick=()=>deleteDoc(d.ref); card.appendChild(del);
+      box.appendChild(card);
+    });
+  });
+  notifUi();
+}
+$("addTask").onclick = async () => {
+  const topic=$("topic").value.trim(); $("taskErr").textContent="";
+  if(topic.length<8) return $("taskErr").textContent="Décris ce que tu veux surveiller en une phrase complète.";
+  await addDoc(collection(db,"users",auth.currentUser.uid,"tasks"),{topic,hour:newT.h,minute:newT.m,createdAt:serverTimestamp()});
+  $("topic").value="";
+};
+
+const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+function notifUi(){ const ok="serviceWorker" in navigator && "PushManager" in window;
+  if(!ok||!standalone){ $("notifHint").hidden=false; $("notif").disabled=!ok; }
+  if(ok && Notification.permission==="granted") $("notif").textContent="Notifications activées"; }
+const b64=(s)=>{const p="=".repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))};
+$("notif").onclick = async () => { try {
+  const reg = await navigator.serviceWorker.register("sw.js");
+  if(await Notification.requestPermission()!=="granted") return $("notifInfo").textContent="Refusé. Autorise-les dans Réglages > Veille.";
+  const sub = await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID_PUBLIC_KEY)});
+  await save({pushSubscription:JSON.parse(JSON.stringify(sub))});
+  $("notifInfo").textContent="Notifications activées."; $("notif").textContent="Notifications activées";
+} catch(e){ $("notifInfo").textContent="Impossible. Ajoute d’abord Veille à l’écran d’accueil."; } };
+$("geo").onclick = () => navigator.geolocation.getCurrentPosition(
+  (p)=>{ save({location:{lat:+p.coords.latitude.toFixed(2),lon:+p.coords.longitude.toFixed(2)}}); $("geoInfo").textContent="Position enregistrée (précision d’environ 1 km)."; },
+  ()=>($("geoInfo").textContent="Position refusée. Tu peux nommer le lieu dans ta demande."),{timeout:8000});
+</script></body></html>
