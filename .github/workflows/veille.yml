@@ -19,6 +19,6 @@ jobs:
           WORKER_EMAIL: ${{ secrets.WORKER_EMAIL }}
           WORKER_PASSWORD: ${{ secrets.WORKER_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY || 'BEWCzGggUrOLEBi48kia5n_Yqg0pghXGqoXVGVb5nqSCHzYv79ES8m3M5knKsj6bKhFo4S9iha_9zpGUJ07Gd6c' }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_EMAIL: ${{ secrets.VAPID_EMAIL }}
