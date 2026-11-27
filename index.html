@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Veille">
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#0b1220"><title>Veille</title>
+<style>
+:root{--ink:#f4f7ff;--muted:rgba(235,242,255,.64);--edge:rgba(255,255,255,.4);--dim:rgba(255,255,255,.11);
+--blue:#5aa9ff;--ok:#5be3a4;--warn:#ffc864;--bad:#ff8e8e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font:17px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:var(--ink);background:#0b1220;
+padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:#0b1220}
+.bg i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.85}
+.bg i:nth-child(1){width:70vmax;height:70vmax;left:-25vmax;top:-20vmax;background:#2f6bff}
+.bg i:nth-child(2){width:60vmax;height:60vmax;right:-25vmax;top:25vh;background:#9b4dff}
+.bg i:nth-child(3){width:55vmax;height:55vmax;left:5vmax;bottom:-28vmax;background:#10c8c0}
+main{max-width:30rem;margin:0 auto;padding:26px 18px 60px}
+h1{font-size:2.1rem;letter-spacing:-.03em;margin:6px 4px 2px}
+h2{font-size:1.05rem;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 4px 20px}
+.glass{position:relative;border-radius:26px;padding:18px;margin:0 0 14px;
+background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.12) 40%,rgba(255,255,255,.06));
+-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+border:1px solid var(--dim);box-shadow:inset 1px 1px 0 var(--edge),inset -1px -1px 0 rgba(255,255,255,.08),0 18px 40px -18px rgba(0,0,0,.55)}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 20% 0%,rgba(255,255,255,.26),transparent 55%)}
+.glass>*{position:relative}
+input,textarea{width:100%;font:inherit;color:var(--ink);padding:14px 16px;margin:0 0 10px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--dim);outline:none}
+textarea{min-height:96px;resize:vertical}
+::placeholder{color:var(--muted)}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(90,169,255,.35)}
+button{font:inherit;color:var(--ink);cursor:pointer;border:0;border-radius:999px;padding:13px 20px;font-weight:600;
+background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.14));box-shadow:inset 1px 1px 0 var(--edge),0 8px 20px -10px rgba(0,0,0,.6);transition:transform .15s}
+button:active{transform:scale(.96)}
+button.main{background:linear-gradient(180deg,#78b9ff,#3f86ff);color:#fff}
+button.wide{width:100%}button.grow{flex:1}
+button.link{background:none;box-shadow:none;color:var(--blue);padding:8px}
+button.pill{font-variant-numeric:tabular-nums;font-size:1.15rem;min-width:96px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center}
+.err{color:var(--bad);min-height:1.2em;margin:4px 2px 0}.info{color:var(--ok);margin:8px 2px 0}.hint{color:var(--muted);font-size:.92rem;margin:6px 2px 0}
+[hidden]{display:none!important}
+.task .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+.task .topic{font-weight:600}
+.verdict{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;margin:6px 0 4px}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.unk{color:var(--muted)}
+.upd{color:var(--muted);font-size:.88rem;margin:6px 0 0}
+
+.bar{display:flex;align-items:center;gap:12px;margin:6px 0 16px}.bar h1{margin:0;font-size:1.6rem}
+.icon{width:44px;height:44px;padding:0;font-size:1.3rem;flex:none}
+.timeIn{font:inherit;color:var(--ink);background:rgba(255,255,255,.16);border:1px solid var(--dim);border-radius:14px;padding:10px 12px;margin:0;width:auto;color-scheme:dark}
+#drawerWrap{position:fixed;inset:0;z-index:10;display:flex}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.drawer{position:relative;width:min(20rem,86vw);height:100%;margin:0;border-radius:0 26px 26px 0;overflow-y:auto;padding-top:calc(18px + env(safe-area-inset-top));background:linear-gradient(145deg,rgba(40,52,84,.92),rgba(30,40,70,.85))}
+.item{display:block;width:100%;text-align:left;background:none;box-shadow:none;border-radius:14px;padding:12px;font-weight:500;margin-top:4px}
+.item.on{background:rgba(255,255,255,.18)}
+.item small{display:block;color:var(--muted);font-weight:400}
+</style></head><body>
+<div class="bg"><i></i><i></i><i></i></div>
+<main>
+<section id="auth" hidden>
+  <h1>Veille</h1><p class="sub">Dis ce que tu veux surveiller. Reçois un résumé à l’heure de ton choix.</p>
+  <div class="glass">
+    <input id="email" type="email" placeholder="Adresse e-mail" autocomplete="email">
+    <input id="pass" type="password" placeholder="Mot de passe (6 caractères minimum)" autocomplete="current-password">
+    <button id="signin" class="main wide">Se connecter</button>
+    <button id="google" class="wide" style="margin-top:10px">Continuer avec Google</button>
+    <div class="row" style="justify-content:center;margin-top:6px"><button id="signup" class="link">Créer un compte</button><button id="reset" class="link">Mot de passe oublié</button></div>
+    <p id="authErr" class="err" role="alert"></p><p id="authInfo" class="info"></p>
+  </div>
+</section>
+<section id="verify" hidden>
+  <h1>Vérifie ton e-mail</h1><p class="sub">Un lien de confirmation vient de t’être envoyé (regarde aussi les courriers indésirables). Touche-le, puis reviens ici.</p>
+  <div class="glass"><button id="checked" class="main wide">C’est fait</button>
+    <div class="row" style="justify-content:center;margin-top:6px"><button id="resend" class="link">Renvoyer le lien</button><button id="out1" class="link">Changer de compte</button></div>
+    <p id="verErr" class="err" role="alert"></p></div>
+</section>
+<section id="app" hidden>
+  <div class="bar"><button id="menuBtn" class="icon" aria-label="Menu">&#9776;</button><h1 id="viewTitle">Nouvelle veille</h1></div>
+  <div id="newView">
+    <div class="glass"><h2>Que veux-tu surveiller ?</h2>
+      <textarea id="topic" placeholder="Exemple : préviens-moi quand les pistes de ski de fond ouvrent près de Villars."></textarea>
+      <div class="row"><input id="newTime" type="time" value="07:30" class="timeIn" aria-label="Heure du résumé"><button id="addTask" class="main grow">Ajouter</button></div>
+      <p id="taskErr" class="err" role="alert"></p></div>
+    <div class="glass"><h2>Notifications et position</h2>
+      <p class="hint" style="margin:0 0 10px">Ton navigateur ou ton téléphone te demandera l’autorisation à ton premier appui sur l’écran. Accepte pour recevoir tes résumés.</p>
+      <button id="notif" class="wide">Activer les notifications</button><p id="notifInfo" class="info"></p>
+      <p id="notifHint" class="hint" hidden>Sur iPhone : bouton Partager, puis « Sur l’écran d’accueil », et rouvre Veille depuis l’icône.</p>
+      <button id="geo" class="wide" style="margin-top:10px">Partager ma position approximative</button><p id="geoInfo" class="info"></p>
+      <p class="hint" id="tz"></p></div>
+  </div>
+  <div id="taskView" hidden>
+    <div class="glass"><p class="hint" style="margin:0 0 4px">Ta demande</p><p id="tvTopic" style="margin:0 0 14px"></p>
+      <div class="row" style="justify-content:space-between"><span>Heure du résumé</span><input id="tvTime" type="time" class="timeIn" aria-label="Heure du résumé"></div></div>
+    <div id="tvHistory"></div>
+    <button id="tvDel" class="link wide">Supprimer cette veille</button>
+  </div>
+</section>
+<div id="drawerWrap" hidden><div class="scrim" id="scrim"></div><aside class="glass drawer">
+  <button id="newBtn" class="main wide">+ Nouvelle veille</button>
+  <div id="menuList"></div>
+  <button id="out2" class="link wide" style="margin-top:14px">Se déconnecter</button></aside></div>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { firebaseConfig, VAPID_PUBLIC_KEY } from "./config.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, collection, addDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+
+const auth = getAuth(initializeApp(firebaseConfig)), db = getFirestore();
+const $ = (id) => document.getElementById(id);
+const show = (id) => ["auth","verify","app"].forEach((s) => ($(s).hidden = s !== id));
+const pad = (n) => String(n).padStart(2,"0");
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+let unsub = null;
+
+const errMsg = (e) => ({
+  "auth/invalid-credential":"E-mail ou mot de passe incorrect.","auth/email-already-in-use":"Un compte existe déjà avec cet e-mail.",
+  "auth/weak-password":"Mot de passe trop court : 6 caractères minimum.","auth/invalid-email":"Adresse e-mail invalide.",
+  "auth/too-many-requests":"Trop d’essais. Réessaie dans quelques minutes."}[e.code] || "Une erreur est survenue. Réessaie.");
+
+$("signin").onclick = () => signInWithEmailAndPassword(auth,$("email").value,$("pass").value).catch((e)=>$("authErr").textContent=errMsg(e));
+$("signup").onclick = async () => { try { const c = await createUserWithEmailAndPassword(auth,$("email").value,$("pass").value); await sendEmailVerification(c.user); } catch(e){ $("authErr").textContent = errMsg(e); } };
+$("google").onclick = async () => { const g = new GoogleAuthProvider(); $("authErr").textContent="";
+  try { await signInWithPopup(auth, g); }
+  catch(e){ if(["auth/popup-blocked","auth/operation-not-supported-in-this-environment"].includes(e.code)) signInWithRedirect(auth, g);
+    else if(!["auth/popup-closed-by-user","auth/cancelled-popup-request"].includes(e.code)) $("authErr").textContent="Connexion Google impossible. Utilise ton e-mail."; } };
+$("reset").onclick = async () => { $("authErr").textContent=""; if(!$("email").value) return $("authErr").textContent="Entre d’abord ton adresse e-mail.";
+  try { await sendPasswordResetEmail(auth,$("email").value); $("authInfo").textContent="Lien de réinitialisation envoyé."; } catch(e){ $("authErr").textContent=errMsg(e); } };
+$("resend").onclick = async () => { try { await sendEmailVerification(auth.currentUser); $("verErr").textContent=""; } catch(e){ $("verErr").textContent=errMsg(e); } };
+$("checked").onclick = async () => { await auth.currentUser.reload(); if(auth.currentUser.emailVerified){ await auth.currentUser.getIdToken(true); start(auth.currentUser); } else $("verErr").textContent="E-mail pas encore vérifié. Touche le lien reçu."; };
+$("out1").onclick = $("out2").onclick = () => signOut(auth);
+onAuthStateChanged(auth,(u)=>{ if(unsub){unsub();unsub=null} if(!u){ $("drawerWrap").hidden = true; return show("auth"); } if(!u.emailVerified) return show("verify"); start(u); });
+
+const save = (data) => setDoc(doc(db,"users",auth.currentUser.uid),data,{merge:true});
+let tasks = [], current = null, unsubH = null, pendingGo = null, permsBound = false;
+const hhmm = (h,m) => `${pad(h)}:${pad(m)}`;
+const parseT = (v) => { const [h,m] = String(v).split(":").map(Number); return Number.isInteger(h) && Number.isInteger(m) ? {h,m} : null; };
+const nameOf = (t) => t.title || (t.topic.length > 32 ? t.topic.slice(0,32) + "…" : t.topic);
+const drawer = (open) => ($("drawerWrap").hidden = !open);
+$("menuBtn").onclick = () => drawer(true);
+$("scrim").onclick = () => drawer(false);
+$("newBtn").onclick = () => { go(null); drawer(false); };
+
+function renderMenu(){
+  const box = $("menuList"); box.innerHTML = "";
+  if(!tasks.length){ box.innerHTML = '<p class="hint">Aucune veille pour l’instant.</p>'; return; }
+  tasks.forEach((t) => {
+    const b = document.createElement("button"); b.className = "item" + (t.id === current ? " on" : ""); b.textContent = nameOf(t);
+    const sm = document.createElement("small"); sm.textContent = hhmm(t.hour,t.minute) + (t.result && t.result.verdict ? " · " + t.result.verdict : ""); b.appendChild(sm);
+    b.onclick = () => { go(t.id); drawer(false); }; box.appendChild(b);
+  });
+}
+function paintTask(){
+  const t = tasks.find((x) => x.id === current); if(!t) return;
+  $("viewTitle").textContent = nameOf(t); $("tvTopic").textContent = t.topic; $("tvTime").value = hhmm(t.hour,t.minute);
+}
+function go(id){
+  if(unsubH){ unsubH(); unsubH = null; }
+  if(id && !tasks.some((x) => x.id === id)) id = null;
+  current = id; $("newView").hidden = !!id; $("taskView").hidden = !id; renderMenu();
+  if(!id){ $("viewTitle").textContent = "Nouvelle veille"; return; }
+  paintTask();
+  unsubH = onSnapshot(query(collection(db,"users",auth.currentUser.uid,"tasks",id,"summaries"),orderBy("createdAt","desc")),(snap) => {
+    const box = $("tvHistory"); box.innerHTML = "";
+    if(snap.empty){ box.innerHTML = '<div class="glass"><p class="hint" style="margin:0">Pas encore de résumé. Le premier arrive environ 2 heures avant l’heure choisie.</p></div>'; return; }
+    snap.forEach((d) => {
+      const r = d.data(), c = document.createElement("div"); c.className = "glass";
+      const v = document.createElement("p"); v.className = "verdict " + r.tone; v.textContent = r.verdict;
+      const sm = document.createElement("p"); sm.style.margin = "0"; sm.textContent = r.summary;
+      const u = document.createElement("p"); u.className = "upd"; u.textContent = d.id + " · actualisé à " + r.at;
+      c.append(v,sm,u); box.appendChild(c);
+    });
+  });
+}
+$("tvTime").onchange = () => { const tm = parseT($("tvTime").value), t = tasks.find((x) => x.id === current); if(tm && t) updateDoc(t.ref,{hour:tm.h,minute:tm.m,prepKey:null,sentKey:null}); };
+$("tvDel").onclick = () => { const t = tasks.find((x) => x.id === current); if(t && confirm("Supprimer cette veille ?")) deleteDoc(t.ref); };
+$("addTask").onclick = async () => {
+  const topic = $("topic").value.trim(), tm = parseT($("newTime").value); $("taskErr").textContent = "";
+  if(topic.length < 8) return $("taskErr").textContent = "Décris ce que tu veux surveiller en une phrase complète.";
+  if(!tm) return $("taskErr").textContent = "Choisis une heure.";
+  const ref = await addDoc(collection(db,"users",auth.currentUser.uid,"tasks"),{topic,hour:tm.h,minute:tm.m,createdAt:serverTimestamp()});
+  $("topic").value = ""; pendingGo = ref.id;
+};
+
+/* Notifications et position : la fenêtre d'autorisation est celle du système, au premier appui. */
+const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+const pushOk = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const b64 = (s) => { const p = "=".repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from([...r].map((c) => c.charCodeAt(0))); };
+async function askNotif(){
+  if(!pushOk) return;
+  try {
+    if(Notification.permission === "default") await Notification.requestPermission();
+    if(Notification.permission === "granted"){
+      const reg = await navigator.serviceWorker.register("sw.js");
+      const sub = await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID_PUBLIC_KEY)});
+      await save({pushSubscription:JSON.parse(JSON.stringify(sub))});
+      $("notifInfo").textContent = "Notifications activées."; $("notif").hidden = true;
+    } else if(Notification.permission === "denied") $("notifInfo").textContent = "Refusées. Autorise-les dans les réglages du navigateur ou de l’appareil.";
+  } catch(e){ $("notifInfo").textContent = "Impossible d’activer les notifications ici."; }
+}
+function askGeo(){
+  if(!navigator.geolocation) return $("geoInfo").textContent = "Position indisponible sur cet appareil.";
+  navigator.geolocation.getCurrentPosition(
+    (p) => { save({location:{lat:+p.coords.latitude.toFixed(2),lon:+p.coords.longitude.toFixed(2)}}); $("geoInfo").textContent = "Position enregistrée (précision d’environ 1 km)."; $("geo").hidden = true; },
+    (e) => { $("geoInfo").textContent = e.code === 1 ? "Refusée. Autorise la position dans les réglages du navigateur." : e.code === 2 ? "Position introuvable : active les services de localisation de l’appareil." : "La position a mis trop de temps. Réessaie."; },
+    {timeout:20000,maximumAge:600000});
+}
+$("notif").onclick = askNotif; $("geo").onclick = askGeo;
+async function initPerms(){
+  $("notifHint").hidden = !(iOS && !standalone);
+  $("tz").textContent = "Fuseau détecté : " + timeZone.replace("_"," ") + " (l’heure suit ton appareil).";
+  if(pushOk && Notification.permission === "granted") askNotif();   // reconnexion : réabonnement sans nouvelle demande
+  let geoState = "prompt";
+  try { geoState = (await navigator.permissions.query({name:"geolocation"})).state; } catch(e) {}
+  if(geoState === "granted") askGeo();
+  if(permsBound) return; permsBound = true;
+  document.addEventListener("click", async () => {                    // premier appui : demandes natives
+    if(pushOk && Notification.permission === "default" && (!iOS || standalone)) await askNotif();
+    if(geoState === "prompt") askGeo();
+  }, {once:true});
+}
+
+function start(user){
+  show("app"); drawer(false); tasks = []; go(null); save({ timeZone });
+  unsub = onSnapshot(query(collection(db,"users",user.uid,"tasks"),orderBy("createdAt","desc")),(snap) => {
+    tasks = snap.docs.map((d) => ({ id:d.id, ref:d.ref, ...d.data() }));
+    if(pendingGo && tasks.some((x) => x.id === pendingGo)){ const id = pendingGo; pendingGo = null; go(id); return; }
+    if(current && !tasks.some((x) => x.id === current)) return go(null);
+    paintTask(); renderMenu();
+  });
+  initPerms();
+}
+</script></body></html>
