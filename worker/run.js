@@ -53,29 +53,38 @@ async function push(userRef, sub, res) {
 
 (async () => {
   await signInWithEmailAndPassword(getAuth(app), process.env.WORKER_EMAIL, process.env.WORKER_PASSWORD);
+  console.log("Connecté en tant que worker.");
   const db = getFirestore(app);
-  for (const u of (await getDocs(collection(db, "users"))).docs) {
+  const usersSnap = await getDocs(collection(db, "users"));
+  console.log(`${usersSnap.size} compte(s) trouvé(s).`);
+  for (const u of usersSnap.docs) {
     const user = u.data(), tz = user.timeZone || "Europe/Zurich";
-    for (const t of (await getDocs(collection(u.ref, "tasks"))).docs) {
+    const tasksSnap = await getDocs(collection(u.ref, "tasks"));
+    console.log(`Compte ${u.id.slice(0, 6)}… : fuseau ${tz}, ${tasksSnap.size} veille(s), notifications ${user.pushSubscription ? "activées" : "NON activées"}.`);
+    for (const t of tasksSnap.docs) {
       const task = t.data();
-      if (task.hour == null) continue;
+      if (task.hour == null) { console.log("  veille sans heure, ignorée."); continue; }
       const now = local(tz);
       let diff = task.hour * 60 + task.minute - now.min, key = now.key;
       if (diff < -30) { diff += 1440; key = now.tomorrow; }
+      console.log(`  « ${String(task.topic).slice(0, 40)} » : ${task.hour}:${task.minute}, dans ${diff} min (il est ${now.label} chez toi), passe 1 faite : ${task.prepKey === key}, envoi fait : ${task.sentKey === key}.`);
       try {
         if (diff <= 130 && diff > 5 && task.prepKey !== key) {
+          console.log("    -> passe 1 : résumé de secours.");
           // Passe 1 : environ 2 h avant, résumé de secours.
           const res = await research(task.topic, tz, user.location);
           await updateDoc(t.ref, { result: { ...res, at: now.label }, prepKey: key });
         } else if (diff <= 5 && task.sentKey !== key) {
+          console.log("    -> passe 2 : résumé frais et notification.");
           // Passe 2 : environ 5 min avant, résumé frais + notification. Repli sur la passe 1 si ça échoue.
           let res;
           try { res = { ...(await research(task.topic, tz, user.location)), at: now.label }; }
           catch { res = task.result || { verdict: "Indisponible", tone: "unk", summary: "La recherche a échoué ce matin.", at: now.label }; }
           await updateDoc(t.ref, { result: res, sentKey: key });
           if (user.pushSubscription) await push(u.ref, user.pushSubscription, res);
-        }
-      } catch (e) { console.error(task.topic, e.message); }
+          else console.log("    (pas d’envoi : notifications non activées)");
+        } else console.log("    -> rien à faire maintenant.");
+      } catch (e) { console.error("    erreur :", e.message); }
     }
   }
 })().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });
