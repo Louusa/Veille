@@ -7,7 +7,7 @@ const webpush = require("web-push");
 const P = process.env.FIREBASE_PROJECT_ID;
 const app = initializeApp({ apiKey: process.env.FIREBASE_API_KEY, authDomain: `${P}.firebaseapp.com`, projectId: P });
 webpush.setVapidDetails("mailto:" + process.env.VAPID_EMAIL, process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 function local(tz) {
   const p = Object.fromEntries(
